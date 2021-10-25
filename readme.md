@@ -17,5 +17,5 @@ Generated images after 15 epochs of training.
 ![Samples of generated images at epoch 15.](samples/e_15.png)
 
 ## Latent Explorer
-A GUI latent explorer written with PySide2.
+A GUI latent explorer written with PySide2. [Demo Video](https://youtu.be/K0CKCfcNfm0)
 ![Screenshot of the latent explorer](samples/explorer.png)
