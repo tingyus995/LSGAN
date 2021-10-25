@@ -9,6 +9,7 @@ from PySide2.QtCore import *
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from torch._C import device
+from torchvision.utils import make_grid
 
 from model import latent_size, Generator
 # latent_size = 10
@@ -58,7 +59,11 @@ class MainWindow(QMainWindow):
         # states
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.netG = Generator().to(self.device)
-        self.load_weight("e_40")
+        self.netG.eval()
+        self.load_weight("e_45")
+        self.latent_batch = 64
+        self.latents = []
+        self.current_latent = None
 
         self.main_layout = QHBoxLayout()
         self.slider_layout = QGridLayout()
@@ -106,9 +111,17 @@ class MainWindow(QMainWindow):
             self.sliders[index].setValue(num)
     
     def generate_latent(self):
-        noise = torch.randn(64, latent_size, 1, 1)[random.randint(0, 63)]
-        self.set_sliders(noise.view(-1).tolist()) 
-        self.update_pixmap(self.get_latent())
+        if len(self.latents) == 0 or self.current_latent is None or self.current_latent == len(self.latents) - 1:
+            noise = torch.randn(64, latent_size, 1, 1)
+            noise = noise.view(64, latent_size)
+            self.latents = noise.tolist()
+            self.current_latent = 0
+        else:
+            self.current_latent += 1
+
+        self.set_sliders(self.latents[self.current_latent]) 
+        # self.update_pixmap(self.get_latent())
+        self.update_pixmap(self.latents[self.current_latent])
 
     
     def get_latent(self):
@@ -123,8 +136,9 @@ class MainWindow(QMainWindow):
     def update_pixmap(self, latent: List[float]):
         latent = torch.tensor(latent)
         latent = latent.view(1, latent_size, 1, 1)
-        output = self.netG(latent.to(self.device)).cpu()[0].permute(1, 2, 0).contiguous()
+        output = self.netG(latent.to(self.device))
         output = (output + 1) / 2.0
+        output = output.cpu()[0].permute(1, 2, 0).contiguous()
         output = (output * 255).to(torch.uint8)
         output: np.ndarray = output.numpy()
         qimage = QImage(output.data, 128, 128, QImage.Format_RGB888)
