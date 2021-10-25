@@ -1,3 +1,4 @@
+import random
 import os
 from typing import *
 import sys
@@ -105,8 +106,8 @@ class MainWindow(QMainWindow):
             self.sliders[index].setValue(num)
     
     def generate_latent(self):
-        noise = torch.randn(latent_size)
-        self.set_sliders(noise.tolist()) 
+        noise = torch.randn(64, latent_size, 1, 1)[random.randint(0, 63)]
+        self.set_sliders(noise.view(-1).tolist()) 
         self.update_pixmap(self.get_latent())
 
     
